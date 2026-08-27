@@ -4,7 +4,7 @@
 
 Foxity 是一个面向竞赛/项目团队的 **AI 对话式能力测评平台**。它不是把人工测评流程 AI 化的问卷工具，而是让 AI 发挥独有的能力：**动态判断、主动发现、跨域联想、实时挑战**。
 
-![Next.js](https://img.shields.io/badge/Next.js-16-black) ![React](https://img.shields.io/badge/React-19-61dafb) ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6) ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06b6d4) ![Turso](https://img.shields.io/badge/Database-Turso(libSQL)-ffec00)
+![Next.js](https://img.shields.io/badge/Next.js-16-black) ![React](https://img.shields.io/badge/React-19-61dafb) ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6) ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06b6d4) ![Turso](https://img.shields.io/badge/Database-Turso(libSQL)-ffec00) ![License](https://img.shields.io/badge/License-Apache--2.0-blue)
 
 ## ✨ 核心特性
 
@@ -147,11 +147,6 @@ src/
 └── store/                    # Zustand 全局状态
 ```
 
-## 📚 相关文档
+## 📄 开源协议
 
-- [团队能力测评产品完整方案](./团队能力测评产品_完整方案.md) —— 产品定位、能力维度与评分标准、对话范式设计
-- [KNOWN_ISSUES](./KNOWN_ISSUES.md) —— 已知遗留问题清单及修复状态
-
----
-
-Made with ❤️ by Foxity Team
+本项目基于 [Apache License 2.0](./LICENSE) 协议开源。
