@@ -297,8 +297,8 @@ export default function ProfilePage() {
                 </CardHeader>
                 <CardContent className="space-y-2">
                   {data.highlights.map((h, idx) => (
-                    <div key={idx} className="flex gap-2 text-sm text-fox-navy">
-                      <span className="text-fox-orange">✨</span>
+                    <div key={idx} className="flex items-start gap-2 text-sm text-fox-navy">
+                      <Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0 text-fox-orange" />
                       {h}
                     </div>
                   ))}
@@ -493,6 +493,17 @@ export default function ProfilePage() {
       {/* 隐藏的导出区域：包含所有 tab 内容 */}
       {data && (
       <div id="export-container" style={{ position: "absolute", left: "-9999px", top: "0", width: "800px", background: "#ffffff", padding: "24px" }}>
+        {/* 封面：独占一页，HTML 渲染保证中文正常 */}
+        <div data-export-section data-export-cover style={{ minHeight: "1050px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", background: "#ffffff" }}>
+          <div style={{ fontSize: "13px", letterSpacing: "6px", color: "#ff9f4d", fontWeight: 700, marginBottom: "28px" }}>F O X I T Y</div>
+          <h1 style={{ fontSize: "38px", fontWeight: 700, color: "#2b4c7e", margin: 0 }}>能力画像报告</h1>
+          <div style={{ width: "56px", height: "4px", backgroundColor: "#ff9f4d", borderRadius: "2px", margin: "28px 0" }} />
+          <div style={{ fontSize: "22px", fontWeight: 600, color: "#2b4c7e" }}>{data.user_name}</div>
+          <div style={{ fontSize: "15px", color: "#666", marginTop: "10px" }}>{teamEmoji ? `${teamEmoji} ` : ""}{teamName}</div>
+          <div style={{ fontSize: "13px", color: "#999", marginTop: "48px" }}>生成时间：{new Date().toLocaleDateString("zh-CN")}</div>
+          <div style={{ fontSize: "11px", color: "#bbb", marginTop: "12px" }}>NextStep 2026 武汉站参赛项目</div>
+        </div>
+
         {/* 概览 */}
         <div data-export-section>
           <h2 style={{ fontSize: "20px", fontWeight: "bold", color: "#2b4c7e", marginBottom: "16px" }}>概览</h2>
@@ -507,7 +518,9 @@ export default function ProfilePage() {
             <div style={{ marginBottom: "16px" }}>
               <h3 style={{ fontSize: "16px", fontWeight: "bold", color: "#2b4c7e", marginBottom: "8px" }}>亮点</h3>
               {data.highlights.map((h, idx) => (
-                <div key={idx} style={{ fontSize: "14px", color: "#2b4c7e", marginBottom: "4px" }}>✨ {h}</div>
+                <div key={idx} style={{ fontSize: "14px", color: "#2b4c7e", marginBottom: "4px" }}>
+                  <Sparkles className="mr-1 inline h-3.5 w-3.5 align-[-2px] text-fox-orange" /> {h}
+                </div>
               ))}
             </div>
           )}

@@ -1,7 +1,7 @@
 "use client";
 
 import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
+import html2canvas from "html2canvas-pro";
 
 interface ExportOptions {
   userName: string;
@@ -11,12 +11,14 @@ interface ExportOptions {
 /**
  * 导出画像页面为 PDF
  * 将传入的 DOM 元素列表逐一渲染到 PDF 中
+ * 注意：所有中文内容必须走 canvas 渲染（HTML 截图），jsPDF 内置字体不支持中文
  */
 export async function exportProfileToPDF(
   sections: HTMLElement[],
   options: ExportOptions
 ): Promise<void> {
-  const { userName, teamName } = options;
+  const { userName } = options;
+
   const pdf = new jsPDF({
     orientation: "portrait",
     unit: "mm",
@@ -27,26 +29,10 @@ export async function exportProfileToPDF(
   const pageHeight = pdf.internal.pageSize.getHeight();
   const margin = 10;
   const contentWidth = pageWidth - margin * 2;
+  const maxPageHeight = pageHeight - margin * 2;
 
-  // 封面
-  pdf.setFontSize(24);
-  pdf.text("Foxity 能力画像报告", pageWidth / 2, 60, { align: "center" });
-  pdf.setFontSize(14);
-  pdf.text(userName, pageWidth / 2, 80, { align: "center" });
-  pdf.setFontSize(11);
-  pdf.text(teamName, pageWidth / 2, 92, { align: "center" });
-  pdf.setFontSize(9);
-  pdf.text(
-    `生成时间：${new Date().toLocaleDateString("zh-CN")}`,
-    pageWidth / 2,
-    105,
-    { align: "center" }
-  );
-  pdf.setDrawColor(242, 170, 114);
-  pdf.setLineWidth(0.5);
-  pdf.line(margin, 115, pageWidth - margin, 115);
-
-  let currentY = 130;
+  let currentY = margin;
+  let pageHasContent = false;
 
   for (const section of sections) {
     const canvas = await html2canvas(section, {
@@ -59,31 +45,34 @@ export async function exportProfileToPDF(
     const imgData = canvas.toDataURL("image/png");
     const imgWidth = contentWidth;
     const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    const isCover = section.hasAttribute("data-export-cover");
 
-    // 如果剩余空间不够，换页
-    if (currentY + imgHeight > pageHeight - margin) {
+    // 剩余空间不够时换页
+    if (
+      pageHasContent &&
+      currentY + imgHeight > pageHeight - margin
+    ) {
       pdf.addPage();
       currentY = margin;
+      pageHasContent = false;
     }
 
-    // 如果图片高度超过一页，分页处理
-    if (imgHeight > pageHeight - margin * 2) {
-      // 截断为多页
-      const ratio = (pageHeight - margin * 2) / imgHeight;
-      const sectionCanvasHeight = canvas.height * ratio;
-      let remainingHeight = imgHeight;
+    if (imgHeight > maxPageHeight) {
+      // 超高内容：从新页开始，按页切片
+      if (pageHasContent) {
+        pdf.addPage();
+        pageHasContent = false;
+      }
+      // 每页对应的源图像素高度
+      const sliceSrcHeight = Math.ceil(
+        (canvas.height * maxPageHeight) / imgHeight
+      );
       let srcY = 0;
-
-      while (remainingHeight > 0) {
-        const pageImgHeight = Math.min(remainingHeight, pageHeight - margin * 2);
-
-        // 创建临时 canvas 截取当前部分
+      while (srcY < canvas.height) {
+        const sliceH = Math.min(sliceSrcHeight, canvas.height - srcY);
         const tmpCanvas = document.createElement("canvas");
         tmpCanvas.width = canvas.width;
-        tmpCanvas.height = Math.min(
-          canvas.height - srcY,
-          canvas.height * (pageImgHeight / imgHeight)
-        );
+        tmpCanvas.height = sliceH;
         const tmpCtx = tmpCanvas.getContext("2d");
         if (tmpCtx) {
           tmpCtx.drawImage(
@@ -91,42 +80,49 @@ export async function exportProfileToPDF(
             0,
             srcY,
             canvas.width,
-            tmpCanvas.height,
+            sliceH,
             0,
             0,
             canvas.width,
-            tmpCanvas.height
+            sliceH
           );
-          const tmpImgData = tmpCanvas.toDataURL("image/png");
-          pdf.addImage(tmpImgData, "PNG", margin, margin, imgWidth, pageImgHeight);
+          pdf.addImage(
+            tmpCanvas.toDataURL("image/png"),
+            "PNG",
+            margin,
+            margin,
+            imgWidth,
+            (sliceH * imgWidth) / canvas.width
+          );
         }
-
-        srcY += tmpCanvas.height;
-        remainingHeight -= pageImgHeight;
-
-        if (remainingHeight > 0) {
-          pdf.addPage();
-        }
+        srcY += sliceH;
+        pageHasContent = true;
+        if (srcY < canvas.height) pdf.addPage();
       }
       currentY = pageHeight;
     } else {
       pdf.addImage(imgData, "PNG", margin, currentY, imgWidth, imgHeight);
-      currentY += imgHeight + 5;
+      currentY += imgHeight + 6;
+      pageHasContent = true;
+    }
+
+    // 封面独占一页
+    if (isCover) {
+      pdf.addPage();
+      currentY = margin;
+      pageHasContent = false;
     }
   }
 
-  // 页脚
+  // 页脚（纯 ASCII，jsPDF 内置字体安全）
   const pageCount = pdf.getNumberOfPages();
   for (let i = 1; i <= pageCount; i++) {
     pdf.setPage(i);
     pdf.setFontSize(8);
     pdf.setTextColor(150, 150, 150);
-    pdf.text(
-      `Foxity · 第 ${i} / ${pageCount} 页`,
-      pageWidth / 2,
-      pageHeight - 5,
-      { align: "center" }
-    );
+    pdf.text(`Foxity · ${i} / ${pageCount}`, pageWidth / 2, pageHeight - 5, {
+      align: "center",
+    });
   }
 
   const fileName = `${userName}_Foxity画像报告.pdf`;

@@ -1,7 +1,6 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { BarChart3, Target, Code2, Wallet, Palette, type LucideIcon } from "lucide-react";
 import type { HardSkillKey, VerifyStatus } from "@/types";
 import { hardSkillMeta } from "@/types";
 import { Tag } from "@/components/Tag";
@@ -19,21 +18,12 @@ const statusLabel: Record<VerifyStatus, { label: string; tone: "mint" | "yellow"
   untested: { label: "未涉及", tone: "gray" },
 };
 
-// 各维度对应的 lucide 图标
-const iconMap: Record<HardSkillKey, LucideIcon> = {
-  market_analysis: BarChart3,
-  product_thinking: Target,
-  technical: Code2,
-  business_finance: Wallet,
-  design: Palette,
-};
-
 export function AbilityBar({ dimension, score, verified, delay = 0 }: AbilityBarProps) {
   const meta = hardSkillMeta.find((item) => item.key === dimension);
   const status = statusLabel[verified];
   const fillColor =
     verified === "verified" ? "bg-fox-orange" : verified === "unverified" ? "bg-fox-orange-light" : "bg-fox-gray";
-  const Icon = iconMap[dimension];
+  const Icon = meta?.icon;
 
   return (
     <div>

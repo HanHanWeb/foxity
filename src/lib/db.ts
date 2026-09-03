@@ -1,9 +1,9 @@
 import { createClient, type Client } from "@libsql/client";
 
-const TURSO_URL = process.env.TURSO_DATABASE_URL || "libsql://hks-hanhanweb.aws-ap-south-1.turso.io";
+const TURSO_URL = process.env.TURSO_DATABASE_URL || "libsql://foxity-hanhanweb.aws-ap-northeast-1.turso.io";
 const TURSO_TOKEN =
   process.env.TURSO_AUTH_TOKEN ||
-  "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3ODMxNjQ1OTcsImlkIjoiMDE5ZjJiN2ItM2MwMS03NzkxLTkxMzctY2M5YzVkMDc5ZGNjIiwia2lkIjoiOUZYOXBHdFlhcjA1ZHRldXBVb0NxWmhIdG40VXBGRGFzRS1YNjJXZ0xHcyIsInJpZCI6Ijg2N2FjODdjLTYzNmItNGUxNC1hZjQ5LWNmZDQ2MjRiZmU1YiJ9.WgqJLYmUNhUN93aXBO9o4ACn78PIgtwC125wsE9AZq6SZERK_WZzBdfqibP3kQr2n2qOYhiWcwQEDqVX-_FlBA";
+  "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3ODg0Mzg4OTYsImlkIjoiMDFhMDY3NDMtYzQwMS03Nzc5LTg4MjItNjJmMzBkOWQxNjQ3Iiwia2lkIjoiOUZYOXBHdFlhcjA1ZHRldXBVb0NxWmhIdG40VXBGRGFzRS1YNjJXZ0xHcyIsInJpZCI6ImNiNTVkMWJmLWM2NDQtNGU4OS04Y2VlLTYxMTY1ODcxODQzMCJ9.CRUragLvrAU21KbCvUf3FUBKPlhRu6rHwpJthosL4i0UHUv4lC6u9wQfo9LVHby6IGrdmdOS3q5abhHDl7_RAQ";
 
 let _client: Client | null = null;
 

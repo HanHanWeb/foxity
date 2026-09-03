@@ -1,5 +1,24 @@
 // ===== V2 维度定义 =====
 
+import type { LucideIcon } from "lucide-react";
+import {
+  BarChart3,
+  Target,
+  Code,
+  Wallet,
+  Palette,
+  Brain,
+  MessagesSquare,
+  ListChecks,
+  Crown,
+  BookOpen,
+  Search,
+  Settings,
+  Wrench,
+  Lightbulb,
+  Megaphone,
+} from "lucide-react";
+
 // 硬技能维度（5个）
 export type HardSkillKey = "market_analysis" | "product_thinking" | "technical" | "business_finance" | "design";
 
@@ -11,12 +30,12 @@ export const hardSkillLabels: Record<HardSkillKey, string> = {
   design: "设计能力",
 };
 
-export const hardSkillMeta: { key: HardSkillKey; icon: string; name: string; shortName: string }[] = [
-  { key: "market_analysis", icon: "📊", name: "市场分析", shortName: "市场" },
-  { key: "product_thinking", icon: "🎯", name: "产品思维", shortName: "产品" },
-  { key: "technical", icon: "💻", name: "技术能力", shortName: "技术" },
-  { key: "business_finance", icon: "💰", name: "商业/财务", shortName: "财务" },
-  { key: "design", icon: "🎨", name: "设计能力", shortName: "设计" },
+export const hardSkillMeta: { key: HardSkillKey; icon: LucideIcon; name: string; shortName: string }[] = [
+  { key: "market_analysis", icon: BarChart3, name: "市场分析", shortName: "市场" },
+  { key: "product_thinking", icon: Target, name: "产品思维", shortName: "产品" },
+  { key: "technical", icon: Code, name: "技术能力", shortName: "技术" },
+  { key: "business_finance", icon: Wallet, name: "商业/财务", shortName: "财务" },
+  { key: "design", icon: Palette, name: "设计能力", shortName: "设计" },
 ];
 
 // 软实力维度（5个）
@@ -30,13 +49,29 @@ export const softSkillLabels: Record<SoftSkillKey, string> = {
   learning: "学习适应",
 };
 
-export const softSkillMeta: { key: SoftSkillKey; icon: string; name: string; shortName: string }[] = [
-  { key: "personality", icon: "🧠", name: "性格特质", shortName: "性格" },
-  { key: "communication", icon: "💬", name: "沟通协作", shortName: "沟通" },
-  { key: "work_style", icon: "📋", name: "做事风格", shortName: "做事" },
-  { key: "leadership", icon: "👑", name: "领导力", shortName: "领导" },
-  { key: "learning", icon: "📚", name: "学习适应", shortName: "学习" },
+export const softSkillMeta: { key: SoftSkillKey; icon: LucideIcon; name: string; shortName: string }[] = [
+  { key: "personality", icon: Brain, name: "性格特质", shortName: "性格" },
+  { key: "communication", icon: MessagesSquare, name: "沟通协作", shortName: "沟通" },
+  { key: "work_style", icon: ListChecks, name: "做事风格", shortName: "做事" },
+  { key: "leadership", icon: Crown, name: "领导力", shortName: "领导" },
+  { key: "learning", icon: BookOpen, name: "学习适应", shortName: "学习" },
 ];
+
+// 12 型组合角色 → lucide 图标（渲染层映射；评分库里存的是 emoji 字符串数据契约）
+export const twelveTypeIcons: Record<string, LucideIcon> = {
+  "战略操盘手": Target,
+  "洞察协调者": MessagesSquare,
+  "深度研究员": Search,
+  "思路萌芽者": BookOpen,
+  "技术推动者": Settings,
+  "落地搭档": Wrench,
+  "极客工匠": Code,
+  "快速成长者": Lightbulb,
+  "商业掌舵人": Wallet,
+  "资源联结者": Megaphone,
+  "精算分析师": BarChart3,
+  "商业感知者": Lightbulb,
+};
 
 // 全部 10 个维度
 export type SkillKey = HardSkillKey | SoftSkillKey;
@@ -237,7 +272,7 @@ export interface AIResponse {
 
 export interface DimensionMeta {
   key: HardSkillKey;
-  icon: string;
+  icon: LucideIcon;
   name: string;
   shortName: string;
 }

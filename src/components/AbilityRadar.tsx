@@ -44,7 +44,11 @@ export function AbilityRadar({ data, size = 280, fullWidth = false }: AbilityRad
       className="outline-none [&_svg]:outline-none [&_svg:focus]:outline-none [&_.recharts-wrapper]:outline-none [&_.recharts-surface]:outline-none"
     >
       <ResponsiveContainer width="100%" height="100%">
-        <RechartsRadarChart data={chartData} outerRadius="75%">
+        <RechartsRadarChart
+          data={chartData}
+          outerRadius="62%"
+          margin={{ top: 14, right: 26, bottom: 14, left: 26 }}
+        >
           <PolarGrid stroke="#E5E5E5" />
           <PolarAngleAxis
             dataKey="label"

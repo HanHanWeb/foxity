@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { AlertTriangle, CheckCircle2, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { dimensions } from "@/mock/data";
 import type { UserProfile, Ability } from "@/types";
-import { Tag } from "@/components/Tag";
 import { cn } from "@/lib/utils";
 
 interface TeamMatrixProps {
@@ -34,7 +34,7 @@ export function TeamMatrix({ profiles }: TeamMatrixProps) {
     <div className="fox-card overflow-hidden">
       <div className="flex items-center justify-between p-4">
         <h3 className="text-base font-semibold text-fox-navy">团队能力矩阵</h3>
-        <div className="flex gap-1 rounded-lg bg-fox-gray-bg p-1">
+        <div className="flex gap-1 rounded-full bg-fox-gray-bg p-1">
           <Button size="sm" variant={mode === "table" ? "default" : "ghost"} onClick={() => setMode("table")}>
             表格
           </Button>
@@ -50,8 +50,8 @@ export function TeamMatrix({ profiles }: TeamMatrixProps) {
             <div className="p-3">队员</div>
             {dimensions.map((dim) => (
               <div key={dim.key} className="p-3 text-center">
-                {dim.icon} {dim.shortName}
-              </div>
+              <dim.icon className="mr-1 inline h-4 w-4 align-[-2px]" /> {dim.shortName}
+            </div>
             ))}
           </div>
 
@@ -72,7 +72,15 @@ export function TeamMatrix({ profiles }: TeamMatrixProps) {
                     <span className={cn("font-semibold", ability.verification_status === "verified" ? "text-fox-navy" : "text-fox-gray")}>
                       {ability.verification_status === "untested" ? "—" : ability.score}
                     </span>
-                    <Tag label={ability.verification_status === "verified" ? "✅" : ability.verification_status === "unverified" ? "⚠️" : "❓"} tone="gray" />
+                    <span className="inline-flex text-fox-gray" title={ability.verification_status === "verified" ? "已验证" : ability.verification_status === "unverified" ? "待验证" : "未涉及"}>
+                      {ability.verification_status === "verified" ? (
+                        <CheckCircle2 className="h-3.5 w-3.5 text-fox-mint" />
+                      ) : ability.verification_status === "unverified" ? (
+                        <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
+                      ) : (
+                        <HelpCircle className="h-3.5 w-3.5" />
+                      )}
+                    </span>
                   </div>
                 );
               })}

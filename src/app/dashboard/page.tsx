@@ -154,7 +154,7 @@ export default function DashboardPage() {
     <main className="min-h-screen bg-fox-cream/30 pb-12">
       <HomeNavbar />
 
-      <div className="mx-auto max-w-5xl px-4 pt-24 md:px-6">
+      <div className="mx-auto max-w-6xl px-4 pt-24 md:px-6">
         <Button variant="ghost" size="sm" onClick={() => router.push("/")} className="mb-4">
           <ArrowLeft className="mr-2 h-4 w-4" />
           返回首页
@@ -172,7 +172,7 @@ export default function DashboardPage() {
               <h2 className="text-lg font-semibold text-fox-navy">我创建的团队</h2>
               <span className="text-sm text-fox-gray">({owned.length})</span>
             </div>
-            <Button variant="default" size="sm" className="bg-[#2b4c7e] text-white hover:bg-[#243e66]" onClick={() => router.push("/team/create")}>
+            <Button variant="default" size="sm" className="bg-[#2b4c7e] text-white hover:bg-[#2b4c7e]/90" onClick={() => router.push("/team/create")}>
               创建团队
             </Button>
           </div>
@@ -193,7 +193,7 @@ export default function DashboardPage() {
               <h2 className="text-lg font-semibold text-fox-navy">我加入的团队</h2>
               <span className="text-sm text-fox-gray">({joined.length})</span>
             </div>
-            <Button variant="default" size="sm" className="bg-[#2b4c7e] text-white hover:bg-[#243e66]" onClick={() => setJoinOpen(true)}>
+            <Button variant="default" size="sm" className="bg-[#2b4c7e] text-white hover:bg-[#2b4c7e]/90" onClick={() => setJoinOpen(true)}>
               加入团队
             </Button>
           </div>

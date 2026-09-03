@@ -84,7 +84,7 @@ export function JoinTeamDialog({ open, onOpenChange }: JoinTeamDialogProps) {
               value={digit}
               onChange={(e) => handleDigitChange(index, e.target.value)}
               onKeyDown={(e) => handleKeyDown(index, e)}
-              className="h-14 w-12 rounded-xl border-2 border-[#d9dee8] bg-white text-center text-2xl font-bold text-[#425a7a] outline-none transition-all focus:border-[#425a7a] focus:ring-2 focus:ring-[#425a7a]/15"
+              className="h-14 w-12 rounded-full border-2 border-[#d9dee8] bg-white text-center text-2xl font-bold text-[#425a7a] outline-none transition-all focus:border-[#425a7a] focus:ring-2 focus:ring-[#425a7a]/15"
             />
           ))}
         </div>

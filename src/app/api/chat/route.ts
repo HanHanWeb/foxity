@@ -5,6 +5,7 @@ import {
   planRound,
   formatStateForPrompt,
 } from "@/lib/conversation-state";
+import { normalizeMarkers, sanitizeFoxReply } from "@/lib/fox-markup";
 
 const BASE_URL = process.env.DEEPSEEK_BASE_URL || "https://aiping.cn/api/v1";
 const API_KEY = process.env.DEEPSEEK_API_KEY || "QC-7a7871deae33459254726df78d491f40-4db6a87ac8a4314081852120417944b7";
@@ -374,14 +375,18 @@ const LEADER_SUMMARY_PROMPT = `你是「Foxity」，现在以队长视角对成�
 请根据对话记录，对所有 5 个硬技能维度和 5 个软实力维度都给出评估。`;
 
 // 解析 [ROUND_DATA] 标记，提取每轮结构化打标 JSON
+// 即使结束标记缺失（截断），也绝不把 JSON 泄漏进回复文本
 function parseRoundData(content: string): { reply: string; roundData: RoundDataParsed | null } {
   const startTag = content.indexOf("[ROUND_DATA]");
   if (startTag === -1) return { reply: content, roundData: null };
   const endTag = content.indexOf("[/ROUND_DATA]", startTag);
-  if (endTag === -1) return { reply: content, roundData: null };
 
   const reply = content.slice(0, startTag).trim();
-  const jsonStr = content.slice(startTag + "[ROUND_DATA]".length, endTag).trim();
+  const jsonStr = (
+    endTag === -1
+      ? content.slice(startTag + "[ROUND_DATA]".length)
+      : content.slice(startTag + "[ROUND_DATA]".length, endTag)
+  ).trim();
   try {
     const roundData = JSON.parse(jsonStr);
     return { reply, roundData };
@@ -408,20 +413,26 @@ interface RoundDataParsed {
   dimensions_touched_this_round?: string[];
 }
 
-// 解析 [END_ASSESSMENT] 标记，提取纯文本回复和画像 JSON
+// 解析 [END_ASSESSMENT] / [ASSESSMENT_DATA] 标记
+// 任一标记存在即视为画像轮；截断时同样保证回复文本干净
 function parseAssessment(content: string): { reply: string; assessment: V2AssessmentData | null } {
-  const marker = content.indexOf("[END_ASSESSMENT]");
-  if (marker === -1) return { reply: content, assessment: null };
+  const endMarker = content.indexOf("[END_ASSESSMENT]");
+  const dataStart = content.indexOf("[ASSESSMENT_DATA]");
+  const firstMarker = endMarker === -1 ? dataStart : dataStart === -1 ? endMarker : Math.min(endMarker, dataStart);
+  if (firstMarker === -1) return { reply: content, assessment: null };
 
-  // 提取 [ASSESSMENT_DATA] ... [/ASSESSMENT_DATA]
-  const startTag = content.indexOf("[ASSESSMENT_DATA]", marker);
-  const endTag = content.indexOf("[/ASSESSMENT_DATA]", startTag);
-  if (startTag === -1 || endTag === -1) {
-    return { reply: content.slice(0, marker).trim(), assessment: null };
+  const reply = content.slice(0, firstMarker).trim();
+
+  if (dataStart === -1) {
+    return { reply, assessment: null };
   }
 
-  const reply = content.slice(0, marker).trim();
-  const jsonStr = content.slice(startTag + "[ASSESSMENT_DATA]".length, endTag).trim();
+  const endTag = content.indexOf("[/ASSESSMENT_DATA]", dataStart);
+  const jsonStr = (
+    endTag === -1
+      ? content.slice(dataStart + "[ASSESSMENT_DATA]".length)
+      : content.slice(dataStart + "[ASSESSMENT_DATA]".length, endTag)
+  ).trim();
 
   try {
     const assessment = JSON.parse(jsonStr);
@@ -452,7 +463,9 @@ export async function POST(req: Request) {
       .filter((msg: any) => msg && typeof msg.content === "string" && msg.content.trim().length > 0)
       .map((msg: any) => ({
         role: msg.role === "fox" || msg.role === "ai" ? "assistant" : "user",
-        content: (msg.role === "fox" || msg.role === "ai") ? (msg.markup || msg.content) : msg.content,
+        content: normalizeMarkers(
+          ((msg.role === "fox" || msg.role === "ai") ? (msg.markup || msg.content) : msg.content) || ""
+        ),
       }));
 
     const isLeaderMode = viewer_role === "leader";
@@ -499,7 +512,7 @@ export async function POST(req: Request) {
 
     const data = await response.json();
     let content: string = data.choices?.[0]?.message?.content || "";
-    content = content.trim();
+    content = normalizeMarkers(content.trim());
 
     // ===== 队长视角模式：返回 leader_summary JSON =====
     if (isLeaderMode) {
@@ -567,7 +580,12 @@ export async function POST(req: Request) {
       return "thinking";
     };
 
-    const replyText = cleanReply || content;
+    // 出口兜底：无论解析结果如何，最终回复文本必须经过标记清洗
+    // 模型偶尔不带标记直接吐 JSON，或标记被截断，这里统一剥离
+    const replyText = sanitizeFoxReply(cleanReply) ||
+      (roundData || assessment
+        ? "嗯……Foxity 悄悄记了点笔记，我们继续聊吧 🦊"
+        : sanitizeFoxReply(content));
 
     // ===== V3 评分引擎：从历史所有轮次收集证据并计算评分 =====
     let v3Scores: any = null;

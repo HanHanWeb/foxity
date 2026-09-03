@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Script from "next/script";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,15 +12,6 @@ import {
   CardHeader,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
-const GEETEST_CAPTCHA_ID = "163a936b1a0e329ff04d7e33eb74a019";
-
-interface GeetestValidate {
-  lot_number: string;
-  captcha_output: string;
-  pass_token: string;
-  gen_time: string;
-}
 
 export default function AuthPage() {
   const router = useRouter();
@@ -43,17 +33,6 @@ export default function AuthPage() {
   const [codeCountdown, setCodeCountdown] = useState(0);
   const [codeSending, setCodeSending] = useState(false);
   const [codeMessage, setCodeMessage] = useState("");
-
-  // GEETEST 实例
-  const geetestRef = useRef<any>(null);
-  const geetestReadyRef = useRef(false);
-  const [geetestReady, setGeetestReady] = useState(false);
-
-  // 用于在 GEETEST 成功后继续发送验证码的邮箱值（闭包里读取最新邮箱）
-  const emailRef = useRef("");
-  useEffect(() => {
-    emailRef.current = regEmail;
-  }, [regEmail]);
 
   const saveUserAndRedirect = () => {
     router.push("/");
@@ -143,41 +122,8 @@ export default function AuthPage() {
     }
   };
 
-  // 初始化 GEETEST
-  const initGeetest = useCallback(() => {
-    const w = window as any;
-    if (!w.initGeetest4 || geetestRef.current) return;
-    w.initGeetest4(
-      {
-        captchaId: GEETEST_CAPTCHA_ID,
-        product: "bind",
-      },
-      (captcha: any) => {
-        captcha.onReady(() => {
-          geetestReadyRef.current = true;
-          setGeetestReady(true);
-        });
-        captcha.onSuccess(() => {
-          const validate: GeetestValidate = captcha.getValidate();
-          if (validate) {
-            sendCodeToEmail(emailRef.current.trim(), validate);
-          }
-        });
-        captcha.onError(() => {
-          setCodeMessage("人机验证失败，请重试");
-          setCodeSending(false);
-        });
-        geetestRef.current = captcha;
-      }
-    );
-  }, []);
-
-  const handleGeetestScriptLoad = () => {
-    initGeetest();
-  };
-
   // 发送验证码到指定邮箱
-  const sendCodeToEmail = async (email: string, validate: GeetestValidate) => {
+  const sendCodeToEmail = async (email: string) => {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       setCodeMessage("请输入有效的邮箱地址");
       setCodeSending(false);
@@ -188,13 +134,7 @@ export default function AuthPage() {
       const res = await fetch("/api/auth/send-code", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email,
-          lot_number: validate.lot_number,
-          captcha_output: validate.captcha_output,
-          pass_token: validate.pass_token,
-          gen_time: validate.gen_time,
-        }),
+        body: JSON.stringify({ email }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -212,7 +152,7 @@ export default function AuthPage() {
     }
   };
 
-  // 点击"获取验证码"按钮：触发 GEETEST
+  // 点击"获取验证码"按钮
   const handleGetCode = () => {
     setCodeMessage("");
     const email = regEmail.trim();
@@ -222,17 +162,8 @@ export default function AuthPage() {
     }
     if (codeCountdown > 0 || codeSending) return;
 
-    if (!geetestReadyRef.current || !geetestRef.current) {
-      setCodeMessage("人机验证加载中，请稍候");
-      return;
-    }
-
     setCodeSending(true);
-    // 重置上一次验证状态，重新弹出
-    try {
-      geetestRef.current.reset && geetestRef.current.reset();
-    } catch (_) {}
-    geetestRef.current.showCaptcha();
+    sendCodeToEmail(email);
   };
 
   // 倒计时
@@ -246,10 +177,6 @@ export default function AuthPage() {
 
   return (
     <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#fbf7ef] px-6 py-16">
-      <Script
-        src="https://static.geetest.com/v4/gt4.js"
-        onLoad={handleGeetestScriptLoad}
-      />
       <div className="pointer-events-none absolute -left-24 top-10 h-80 w-80 rounded-full bg-fox-orange/10 blur-3xl" />
       <div className="pointer-events-none absolute bottom-10 right-12 h-72 w-72 rounded-full bg-fox-mint/10 blur-3xl" />
 
@@ -335,7 +262,7 @@ export default function AuthPage() {
                     <Button
                       type="submit"
                       disabled={loginLoading}
-                      className="mt-2 h-11 rounded-full bg-[#f2aa72] text-base font-semibold text-white shadow-md shadow-[#f2aa72]/20 hover:bg-[#ea9862] disabled:opacity-60"
+                      className="mt-2 h-11 rounded-full bg-[#f2aa72] text-base font-semibold text-white shadow-md shadow-[#f2aa72]/20 hover:bg-[#f2aa72]/90 disabled:opacity-60"
                     >
                       {loginLoading ? "登录中..." : "登录"}
                     </Button>
@@ -391,12 +318,8 @@ export default function AuthPage() {
                           type="button"
                           variant="outline"
                           onClick={handleGetCode}
-                          disabled={
-                            codeCountdown > 0 ||
-                            codeSending ||
-                            !geetestReady
-                          }
-                          className="h-9 shrink-0 rounded-full border-[#d9dee8] bg-white/70 px-3 text-xs font-medium text-[#425a7a] hover:bg-[#f3eee4] hover:text-[#425a7a] disabled:opacity-50"
+                          disabled={codeCountdown > 0 || codeSending}
+                          className="h-9 shrink-0 rounded-full border-[#d9dee8] bg-white/70 px-3 text-xs font-medium text-[#425a7a] hover:bg-[#425a7a]/8 disabled:opacity-50"
                         >
                           {codeCountdown > 0
                             ? `${codeCountdown}s`
@@ -414,11 +337,6 @@ export default function AuthPage() {
                           }`}
                         >
                           {codeMessage}
-                        </p>
-                      )}
-                      {!geetestReady && (
-                        <p className="text-xs text-[#b6c0cf]">
-                          人机验证加载中...
                         </p>
                       )}
                     </div>
@@ -446,7 +364,7 @@ export default function AuthPage() {
                     <Button
                       type="submit"
                       disabled={regLoading}
-                      className="mt-2 h-11 rounded-full bg-[#f2aa72] text-base font-semibold text-white shadow-md shadow-[#f2aa72]/20 hover:bg-[#ea9862] disabled:opacity-60"
+                      className="mt-2 h-11 rounded-full bg-[#f2aa72] text-base font-semibold text-white shadow-md shadow-[#f2aa72]/20 hover:bg-[#f2aa72]/90 disabled:opacity-60"
                     >
                       {regLoading ? "注册中..." : "注册"}
                     </Button>

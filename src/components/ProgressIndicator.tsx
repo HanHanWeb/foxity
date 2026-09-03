@@ -19,7 +19,7 @@ export function ProgressIndicator({ covered }: ProgressIndicatorProps) {
         return (
           <div key={dim.key} className="flex items-center justify-between text-xs">
             <div className="flex items-center gap-2 text-fox-navy">
-              <span>{dim.icon}</span>
+              <dim.icon className="h-3.5 w-3.5" />
               <span className="font-medium">{dim.shortName}</span>
             </div>
             <div className="flex items-center gap-1.5 text-fox-gray">

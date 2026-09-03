@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { verifyGeetest } from "@/lib/geetest";
 import { generateCode, signCode } from "@/lib/email-code";
 import { sendMail } from "@/lib/mail";
 
@@ -7,8 +6,7 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function POST(req: Request) {
   try {
-    const { email, lot_number, captcha_output, pass_token, gen_time } =
-      await req.json();
+    const { email } = await req.json();
 
     if (!email || typeof email !== "string" || !EMAIL_RE.test(email)) {
       return NextResponse.json(
@@ -17,28 +15,7 @@ export async function POST(req: Request) {
       );
     }
 
-    if (!lot_number || !captcha_output || !pass_token || !gen_time) {
-      return NextResponse.json(
-        { error: "请先完成人机验证" },
-        { status: 400 }
-      );
-    }
-
-    // 1. 极验二次校验
-    const result = await verifyGeetest({
-      lot_number,
-      captcha_output,
-      pass_token,
-      gen_time,
-    });
-    if (!result.success) {
-      return NextResponse.json(
-        { error: result.message || "人机验证失败" },
-        { status: 400 }
-      );
-    }
-
-    // 2. 生成验证码并签名（邮箱统一小写存储）
+    // 生成验证码并签名（邮箱统一小写存储）
     const normalizedEmail = email.trim().toLowerCase();
     const code = generateCode();
     const { token } = signCode(normalizedEmail, code);

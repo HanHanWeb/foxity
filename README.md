@@ -6,6 +6,20 @@ Foxity 是一个面向竞赛/项目团队的 **AI 对话式能力测评平台**�
 
 ![Next.js](https://img.shields.io/badge/Next.js-16-black) ![React](https://img.shields.io/badge/React-19-61dafb) ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6) ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06b6d4) ![Turso](https://img.shields.io/badge/Database-Turso(libSQL)-ffec00) ![License](https://img.shields.io/badge/License-Apache--2.0-blue)
 
+## 📸 项目截图
+
+![截图 1](https://picui.ogmua.cn/s1/2026/09/03/6a997e5d5f05d.webp)
+
+![截图 2](https://picui.ogmua.cn/s1/2026/09/03/6a997e5f91552.webp)
+
+![截图 3](https://picui.ogmua.cn/s1/2026/09/03/6a997e6238da7.webp)
+
+![截图 4](https://picui.ogmua.cn/s1/2026/09/03/6a997e6395004.webp)
+
+![截图 5](https://picui.ogmua.cn/s1/2026/09/03/6a997e644bbaa.webp)
+
+![截图 6](https://picui.ogmua.cn/s1/2026/09/03/6a997e68e1a9b.webp)
+
 ## ✨ 核心特性
 
 ### 对话式测评（AI 能动性驱动）

@@ -24,13 +24,12 @@ export async function GET(
     const teamRow = teamResult.rows[0];
 
     // 权限校验：队长 或 team_members 里的成员 都可访问看板
-    // owner 为 null（历史无主团队）时，允许已登录用户查看
     const userId = await getUserId();
     const ownerId = teamRow.owner_user_id as string | null;
     if (!userId) {
       return NextResponse.json({ error: "请先登录" }, { status: 401 });
     }
-    const isOwner = ownerId === userId || ownerId === null;
+    const isOwner = ownerId === userId;
     if (!isOwner) {
       // 校验是否为团队成员
       const memberCheck = await db.execute({
@@ -139,11 +138,10 @@ export async function DELETE(
 
     const ownerId = teamRes.rows[0].owner_user_id as string | null;
 
-    // 权限判断：owner 匹配，或 owner 为 null（历史无主团队）允许已登录用户删除
+    // 权限判断：仅队长可删除团队；成员走退出逻辑
     const isOwner = ownerId === userId;
-    const canDelete = isOwner || ownerId === null;
 
-    if (canDelete) {
+    if (isOwner) {
       // 队长删除团队：删除所有关联数据
       // 用 try-catch 包裹子表删除，避免外键约束等问题导致 teams 行没被删
       try {

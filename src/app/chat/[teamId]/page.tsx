@@ -5,7 +5,7 @@ import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Send, Menu, Lightbulb, UserCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { ChatMessage } from "@/components/ChatMessage";
 import { InsightCard } from "@/components/InsightCard";
@@ -185,7 +185,7 @@ function ChatPageInner() {
                   {highlights.length > 0 ? (
                     <div className="space-y-2">
                       {highlights.map((h, idx) => (
-                        <InsightCard key={idx} icon="✨" text={h} index={idx} />
+                        <InsightCard key={idx} text={h} index={idx} />
                       ))}
                     </div>
                   ) : (
@@ -287,15 +287,26 @@ function ChatPageInner() {
           {/* 输入框：属于左侧对话区域底部 */}
           <div className="border-t border-fox-gray-light bg-white px-4 py-4 md:px-8">
             <div className="mx-auto max-w-3xl">
-              <div className="flex gap-2">
-                <Input
+              <div className="flex items-end gap-2">
+                <Textarea
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleSend()}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
+                      e.preventDefault();
+                      handleSend();
+                    }
+                  }}
                   placeholder="回复 Foxity..."
-                  className="rounded-xl"
+                  rows={2}
+                  className="min-h-[64px] resize-none py-2.5"
                 />
-                <Button variant="secondary" onClick={handleSend} disabled={!input.trim() || isAIThinking}>
+                <Button
+                  variant="secondary"
+                  onClick={handleSend}
+                  disabled={!input.trim() || isAIThinking}
+                  className="h-10 shrink-0 self-end"
+                >
                   <Send className="h-4 w-4" />
                 </Button>
               </div>
@@ -313,7 +324,7 @@ function ChatPageInner() {
             {highlights.length > 0 ? (
               <div className="space-y-2">
                 {highlights.map((h, idx) => (
-                  <InsightCard key={idx} icon="✨" text={h} index={idx} />
+                  <InsightCard key={idx} text={h} index={idx} />
                 ))}
               </div>
             ) : (

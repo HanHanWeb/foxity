@@ -50,12 +50,3 @@ export function verifyCodeToken(token: string, email: string, code: string): boo
     return false;
   }
 }
-
-// 保留旧接口兼容
-export async function markGeetestVerified(_email: string): Promise<void> {}
-export async function isGeetestVerified(_email: string): Promise<boolean> {
-  return true;
-}
-export async function consumeGeetestVerified(_email: string): Promise<boolean> {
-  return true;
-}

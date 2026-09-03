@@ -179,7 +179,7 @@ export default function CreateTeamPage() {
                     <button
                       type="button"
                       onClick={goPrev}
-                      className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border border-fox-gray-light bg-white text-fox-gray hover:text-fox-navy"
+                      className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border border-fox-gray-light bg-white text-fox-gray transition-colors hover:border-fox-orange/40 hover:text-fox-orange"
                     >
                       <ChevronLeft className="h-4 w-4" />
                     </button>
@@ -223,7 +223,7 @@ export default function CreateTeamPage() {
                     <button
                       type="button"
                       onClick={goNext}
-                      className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border border-fox-gray-light bg-white text-fox-gray hover:text-fox-navy"
+                      className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border border-fox-gray-light bg-white text-fox-gray transition-colors hover:border-fox-orange/40 hover:text-fox-orange"
                     >
                       <ChevronRight className="h-4 w-4" />
                     </button>
@@ -342,7 +342,10 @@ export default function CreateTeamPage() {
                 </div>
 
                 <div className="grid gap-2 pt-2 md:grid-cols-2">
-                  <Button variant="secondary" onClick={() => router.push(`/team/${teamCode}/join`)}>
+                  <Button
+                    className="border-transparent bg-fox-yellow text-fox-navy hover:bg-fox-yellow/85"
+                    onClick={() => router.push(`/team/${teamCode}/join`)}
+                  >
                     开始我的测评
                   </Button>
                   <Button variant="outline" onClick={() => router.push(`/team/${teamCode}`)}>

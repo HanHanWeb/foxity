@@ -3,19 +3,20 @@
 import { useState, useEffect, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { ArrowLeft, BarChart3, Brain, MessageSquareQuote, Target, ChevronDown, Loader2, ScrollText, Activity, Clock, MessageCircle, TrendingUp } from "lucide-react";
+import { ArrowLeft, BarChart3, Brain, MessageSquareQuote, Target, ChevronDown, Loader2, ScrollText, Activity, Clock, MessageCircle, TrendingUp, CheckCircle2, AlertTriangle, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AbilityRadar } from "@/components/AbilityRadar";
 import { useStore } from "@/store/useStore";
-import { hardSkillLabels, softSkillLabels, allSkillLabels, type LeaderSummary, type LeaderSkillAssessment, type ChatMessage as ChatMessageType, type UserProfile } from "@/types";
+import { hardSkillLabels, softSkillLabels, type LeaderSummary, type LeaderSkillAssessment, type ChatMessage as ChatMessageType, type UserProfile } from "@/types";
 import { cn } from "@/lib/utils";
+import { sanitizeFoxReply } from "@/lib/fox-markup";
 
 const statusConfig = {
-  verified: { label: "已验证", icon: "✅", color: "text-emerald-600 bg-emerald-50" },
-  unverified: { label: "待验证", icon: "⚠️", color: "text-amber-600 bg-amber-50" },
-  untested: { label: "未涉及", icon: "❓", color: "text-gray-500 bg-gray-100" },
+  verified: { label: "已验证", Icon: CheckCircle2, color: "text-emerald-600 bg-emerald-50" },
+  unverified: { label: "待验证", Icon: AlertTriangle, color: "text-amber-600 bg-amber-50" },
+  untested: { label: "未涉及", Icon: HelpCircle, color: "text-gray-500 bg-gray-100" },
 };
 
 export default function MemberSummaryPage() {
@@ -32,11 +33,16 @@ export default function MemberSummaryPage() {
     return profiles.find((p) => p.user_id === params.userId && p.team_id === params.teamId) ?? null;
   }, [profiles, params.userId, params.teamId]);
 
-  // store 里没有时，从 API 兜底拉一份（例如直接从外部链接进入本页）
+  // store 里没有时，从 API 兜底拉一份（例如直接刷新本页 / 从外部链接进入）
   const [fallbackProfile, setFallbackProfile] = useState<UserProfile | null>(null);
+  const [profileLoaded, setProfileLoaded] = useState(false);
   useEffect(() => {
-    if (profileFromStore) return;
+    if (profileFromStore) {
+      setProfileLoaded(true);
+      return;
+    }
     let cancelled = false;
+    setProfileLoaded(false);
     fetch(`/api/profiles/${params.userId}?team_id=${params.teamId}`, {
       credentials: "include",
     })
@@ -51,7 +57,10 @@ export default function MemberSummaryPage() {
           ...(result.data || {}),
         } as UserProfile);
       })
-      .catch((e) => console.warn("[member-detail] fallback profile fetch failed:", e));
+      .catch((e) => console.warn("[member-detail] fallback profile fetch failed:", e))
+      .finally(() => {
+        if (!cancelled) setProfileLoaded(true);
+      });
     return () => {
       cancelled = true;
     };
@@ -72,7 +81,7 @@ export default function MemberSummaryPage() {
           setChatHistory(
             (data as any[]).map((m) => ({
               role: m.role,
-              content: m.content,
+              content: sanitizeFoxReply(m.content || ""),
               emotion: m.emotion,
               timestamp: m.created_at,
             }))
@@ -91,8 +100,8 @@ export default function MemberSummaryPage() {
 
   useEffect(() => {
     const generateSummary = async () => {
-      // 等聊天记录加载完成后再判断
-      if (!historyLoaded) return;
+      // 等聊天记录和画像都就绪后再判断
+      if (!historyLoaded || !profileLoaded) return;
       if (!profile || chatHistory.length === 0) {
         setLoading(false);
         return;
@@ -125,26 +134,9 @@ export default function MemberSummaryPage() {
     };
 
     generateSummary();
-  }, [profile, chatHistory, historyLoaded]);
+  }, [profile, profileLoaded, chatHistory, historyLoaded]);
 
-  if (!profile) {
-    return (
-      <main className="flex min-h-screen items-center justify-center">
-        <p className="text-fox-gray">未找到该成员</p>
-      </main>
-    );
-  }
-
-  const topScores = leaderSummary
-    ? [
-        ...leaderSummary.hard_skills.map((s) => ({ label: hardSkillLabels[s.dimension as keyof typeof hardSkillLabels] || allSkillLabels[s.dimension as keyof typeof allSkillLabels] || s.dimension, score: s.score })),
-        ...leaderSummary.soft_skills.map((s) => ({ label: softSkillLabels[s.dimension as keyof typeof softSkillLabels] || s.dimension, score: s.score })),
-      ]
-        .sort((a, b) => b.score - a.score)
-        .slice(0, 3)
-    : [];
-
-  // 对话统计数据
+  // 对话统计数据（必须在所有提前 return 之前调用，遵守 Rules of Hooks）
   const chatStats = useMemo(() => {
     if (chatHistory.length === 0) return null;
     const userMsgs = chatHistory.filter((m) => m.role === "user");
@@ -186,10 +178,30 @@ export default function MemberSummaryPage() {
     }));
   }, [leaderSummary]);
 
+  // 画像兜底请求还在飞行中：显示加载态而不是「未找到」
+  if (!profileLoaded) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-[#fbf7ef]">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-fox-orange" />
+          <p className="text-sm text-fox-gray">加载中...</p>
+        </div>
+      </main>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <main className="flex min-h-screen items-center justify-center">
+        <p className="text-fox-gray">未找到该成员</p>
+      </main>
+    );
+  }
+
   return (
     <main className="min-h-screen bg-[#fbf7ef] pb-12">
       <header className="sticky top-0 z-30 border-b border-fox-gray-light bg-white/80 backdrop-blur">
-        <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3 md:px-6 md:py-4">
+        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3 md:px-6 md:py-4">
           <Button variant="ghost" size="sm" onClick={() => router.push(`/team/${params.teamId}`)}>
             <ArrowLeft className="mr-1 h-4 w-4 sm:mr-2" />
             <span className="hidden sm:inline">返回团队看板</span>
@@ -202,16 +214,6 @@ export default function MemberSummaryPage() {
         {/* 成员头部 */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
           <h1 className="text-2xl font-bold text-fox-navy md:text-3xl">{profile.user_name}</h1>
-          {!loading && leaderSummary && topScores.length > 0 && (
-            <p className="mt-2 text-sm text-fox-gray">
-              {topScores.map((s, i) => (
-                <span key={i}>
-                  {i > 0 && " · "}
-                  {s.label} {s.score}
-                </span>
-              ))}
-            </p>
-          )}
         </motion.div>
 
         {loading && (
@@ -254,7 +256,7 @@ export default function MemberSummaryPage() {
                     <CardDescription>AI 分析的五大硬技能分布</CardDescription>
                   </CardHeader>
                   <CardContent className="flex justify-center">
-                    <div className="h-[260px] w-full max-w-[300px]">
+                    <div className="h-[300px] w-full max-w-[340px]">
                       <AbilityRadar data={radarData} fullWidth />
                     </div>
                   </CardContent>
@@ -399,7 +401,7 @@ export default function MemberSummaryPage() {
             {chatHistory.length > 0 && (
               <Card>
                 <button
-                  className="flex w-full items-center justify-between p-6"
+                  className="flex w-full items-center justify-between px-6 py-0"
                   onClick={() => setShowChatHistory(!showChatHistory)}
                 >
                   <CardTitle className="flex items-center gap-2">
@@ -450,8 +452,8 @@ function SkillAssessmentItem({ skill }: { skill: LeaderSkillAssessment }) {
           <span className="font-semibold text-fox-navy">{dimLabel}</span>
           <span className="text-lg font-bold text-fox-navy">{skill.score}/10</span>
         </div>
-        <span className={cn("rounded-full px-2.5 py-0.5 text-xs font-medium", status.color)}>
-          {status.icon} {status.label}
+        <span className={cn("inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium", status.color)}>
+          <status.Icon className="h-3.5 w-3.5" /> {status.label}
         </span>
       </div>
       <p className="mt-2 text-sm text-fox-navy">{skill.summary}</p>

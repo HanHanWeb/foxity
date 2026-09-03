@@ -13,6 +13,8 @@ import {
   EyeOff,
   UserMinus,
   Pencil,
+  HelpCircle,
+  AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -42,7 +44,7 @@ import {
 import { CopyButton } from "@/components/CopyButton";
 import { useStore } from "@/store/useStore";
 import type { HardSkillKey, UserProfile } from "@/types";
-import { hardSkillLabels, hardSkillMeta } from "@/types";
+import { hardSkillLabels, hardSkillMeta, twelveTypeIcons } from "@/types";
 import {
   analyzeTeam,
   getMemberStatus,
@@ -115,9 +117,19 @@ function getTwelveTypeLabel(p: UserProfile): string | null {
   return p.v3_type?.primary_type || null;
 }
 
-// 取成员的 12型图标
-function getTwelveTypeIcon(p: UserProfile): string {
-  return p.v3_type?.primary_icon || "❓";
+// 取成员的 12型图标（按类型名映射 lucide；库里存的 emoji 仅作数据兼容）
+function getTwelveTypeIcon(p: UserProfile) {
+  return (
+    (p.v3_type?.primary_type && twelveTypeIcons[p.v3_type.primary_type]) ||
+    HelpCircle
+  );
+}
+
+// 维度图标（hardSkillMeta 里的 lucide 组件）
+function DimIcon({ dimKey, className }: { dimKey: string; className?: string }) {
+  const meta = hardSkillMeta.find((d) => d.key === dimKey);
+  if (!meta) return null;
+  return <meta.icon className={className} />;
 }
 
 // 状态徽章配置
@@ -266,7 +278,7 @@ export default function TeamDashboardPage() {
     if (!teamAnalysis) return [];
     return Object.entries(teamAnalysis.twelveTypeDistribution).map(
       ([key, val]) => ({
-        name: `${val.icon} ${val.name}`,
+        name: val.name,
         value: val.count,
         key,
       })
@@ -420,7 +432,7 @@ export default function TeamDashboardPage() {
                 <div className="p-2 text-center sm:p-3">队员</div>
                 {hardSkillMeta.map((dim) => (
                   <div key={dim.key} className="p-2 text-center sm:p-3">
-                    {dim.icon} {dim.shortName}
+                    <dim.icon className="mr-1 inline h-3.5 w-3.5 align-[-2px] sm:h-4 sm:w-4" /> {dim.shortName}
                   </div>
                 ))}
                 <div className="p-2 text-center sm:p-3">可信度</div>
@@ -519,7 +531,7 @@ export default function TeamDashboardPage() {
               <Card
                 key={profile.user_id}
                 className={cn(
-                  "transition-all hover:shadow-md",
+                  "py-0 transition-all hover:shadow-md",
                   isOwn && "cursor-pointer border-fox-orange/40"
                 )}
                 onClick={() => {
@@ -635,16 +647,20 @@ export default function TeamDashboardPage() {
           </ResponsiveContainer>
         </div>
         <div className="flex-1 space-y-2">
-          {twelveTypeData.map((item, idx) => (
-            <div key={item.key} className="flex items-center gap-2 text-sm">
-              <span
-                className="inline-block h-3 w-3 rounded-full"
-                style={{ backgroundColor: PIE_COLORS[idx % PIE_COLORS.length] }}
-              />
-              <span className="flex-1 text-fox-navy">{item.name}</span>
-              <span className="font-semibold text-fox-gray">{item.value}人</span>
-            </div>
-          ))}
+          {twelveTypeData.map((item, idx) => {
+            const TypeIcon = twelveTypeIcons[item.name] || HelpCircle;
+            return (
+              <div key={item.key} className="flex items-center gap-2 text-sm">
+                <span
+                  className="inline-block h-3 w-3 rounded-full"
+                  style={{ backgroundColor: PIE_COLORS[idx % PIE_COLORS.length] }}
+                />
+                <TypeIcon className="h-3.5 w-3.5 text-fox-navy" />
+                <span className="flex-1 text-fox-navy">{item.name}</span>
+                <span className="font-semibold text-fox-gray">{item.value}人</span>
+              </div>
+            );
+          })}
         </div>
       </div>
     );
@@ -669,7 +685,7 @@ export default function TeamDashboardPage() {
           >
             <div className="flex items-center justify-between">
               <h4 className="font-semibold text-fox-navy">
-                {hardSkillMeta.find((d) => d.key === dim.dimensionKey)?.icon} {dim.dimension}
+                <DimIcon dimKey={dim.dimensionKey} className="mr-1 inline h-4 w-4 align-[-2px]" /> {dim.dimension}
               </h4>
               <Badge
                 className={cn(
@@ -729,7 +745,7 @@ export default function TeamDashboardPage() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <span className="text-fox-orange">⚠️</span>
+            <AlertTriangle className="h-4 w-4 text-fox-orange" />
             团队短板
           </CardTitle>
           <CardDescription>团队平均分最低的维度（仅队长可见）</CardDescription>
@@ -743,7 +759,7 @@ export default function TeamDashboardPage() {
               >
                 <div className="flex items-center justify-between">
                   <h4 className="font-semibold text-fox-navy">
-                    {hardSkillMeta.find((d) => d.key === dim.dimensionKey)?.icon} {dim.dimension}
+                    <DimIcon dimKey={dim.dimensionKey} className="mr-1 inline h-4 w-4 align-[-2px]" /> {dim.dimension}
                   </h4>
                   <Badge className="border-transparent bg-fox-coral/15 text-fox-coral">
                     待加强
@@ -864,7 +880,7 @@ export default function TeamDashboardPage() {
             ) : (
               <button
                 type="button"
-                className="flex w-full items-center justify-between rounded-lg border border-fox-gray-light bg-white px-3 py-1.5 text-left text-xs hover:border-fox-orange/40"
+                className="flex w-full items-center justify-between rounded-full border border-fox-gray-light bg-white px-3 py-1.5 text-left text-xs hover:border-fox-orange/40"
                 onClick={(e) => {
                   e.stopPropagation();
                   setEditingPositionId(profile.user_id);
@@ -909,7 +925,11 @@ export default function TeamDashboardPage() {
           {twelveType && (
             <div className="mt-3">
               <Badge variant="outline" className="text-xs">
-                {getTwelveTypeIcon(profile)} {twelveType}
+                {(() => {
+                  const TypeIcon = getTwelveTypeIcon(profile);
+                  return <TypeIcon className="mr-1 inline h-3.5 w-3.5 align-[-2px]" />;
+                })()}
+                {twelveType}
               </Badge>
             </div>
           )}
@@ -1014,7 +1034,11 @@ export default function TeamDashboardPage() {
           {twelveType && (
             <div className="mt-3">
               <Badge variant="outline" className="text-xs">
-                {getTwelveTypeIcon(profile)} {twelveType}
+                {(() => {
+                  const TypeIcon = getTwelveTypeIcon(profile);
+                  return <TypeIcon className="mr-1 inline h-3.5 w-3.5 align-[-2px]" />;
+                })()}
+                {twelveType}
               </Badge>
             </div>
           )}
@@ -1026,7 +1050,7 @@ export default function TeamDashboardPage() {
   return (
     <main className="min-h-screen bg-fox-cream/30 pb-12">
       <header className="border-b border-fox-gray-light bg-white">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 md:px-6 md:py-4">
+        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3 md:px-6 md:py-4">
           <Button variant="ghost" size="sm" onClick={() => router.back()}>
             <ArrowLeft className="mr-2 h-4 w-4" />
             <span className="hidden sm:inline">返回</span>

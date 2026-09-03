@@ -50,7 +50,7 @@ export function FileUpload({ onUpload, compact = false }: FileUploadProps) {
         </div>
         <button
           onClick={() => setFile(null)}
-          className="rounded-md p-1 text-fox-gray transition-colors hover:bg-white hover:text-fox-coral"
+          className="rounded-full p-1 text-fox-gray transition-colors hover:text-fox-coral"
           aria-label="移除文件"
         >
           <X className="h-3.5 w-3.5" />
@@ -69,7 +69,7 @@ export function FileUpload({ onUpload, compact = false }: FileUploadProps) {
       onDrop={handleDrop}
       onClick={() => inputRef.current?.click()}
       className={cn(
-        "cursor-pointer rounded-xl border-2 border-dashed text-center transition-colors",
+        "cursor-pointer rounded-2xl border-2 border-dashed text-center transition-colors",
         isDragging ? "border-fox-orange bg-fox-orange/5" : "border-fox-gray-light hover:border-fox-orange-light",
         compact ? "px-3 py-2" : "p-4"
       )}

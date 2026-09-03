@@ -25,7 +25,7 @@ export async function GET(
       return NextResponse.json({ error: "团队不存在" }, { status: 404 });
     }
     const ownerId = teamRes.rows[0].owner_user_id as string | null;
-    if (ownerId !== userId && ownerId !== null) {
+    if (ownerId !== userId) {
       return NextResponse.json({ error: "只有队长可以查看能力矩阵" }, { status: 403 });
     }
 
